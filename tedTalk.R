@@ -1,6 +1,6 @@
 # let's find out the working directory
 getwd()
-
+setwd("C:/Users/Dhaval/Documents/Old Classes/CSC 465/ted-talks")
 
 # let's install the packages we don't have currently
 install.packages('treemap')
@@ -8,14 +8,15 @@ install.packages("wordcloud")
 
 
 # let's load the necessary library for this project
+library('tidyverse')
 library('treemap')
 library('lubridate')
 library('plyr')
-library('dplyr')
+#library('dplyr')
 library('corrplot')
 library('wordcloud')
-library('ggplot2')
-library('tidyverse')
+#library('ggplot2')
+
 
 
 # let's read the data into a dataframe called df
@@ -131,11 +132,53 @@ ggplot(data=df6, aes(year, Num_of_TEDtalks))+
 
 
 
+
 # let's find the top tag
 tags<-df$tags
 tags<-as.character(tags)
+tags<-data.frame(table(str_extract_all(tags, '[a-zA-Z]+', simplify = TRUE)))
+tags<-tags[2:451,]
 View(tags)
+set.seed(1234)
+wordcloud(words = tags$Var1, freq = tags$Freq, min.freq = 1,
+          max.words=20, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
+
+
+# make bar graph of the top 10 tags
+tags<-tags[order(-tags$Freq),]
+class(tags)
+View(tags)
+barplot(tags$Freq[1:10],names.arg=tags$Var1[1:10], col=rainbow(10))
+
+# Draw bar plot of the top 10 tags
+top_ten_tags<-as.data.frame(tags[order(-tags$Freq),][1:10,]) # select top 10 tags
+dim(top_ten_tags) 
+colnames(top_ten_tags)<-c('Fields', 'Num_Count')
+top_ten_tags<-top_ten_tags%>%arrange(desc(Num_Count))
+#View(top_ten_tags)
+
+# Use ggplot to draw bar plot
+ggplot(data=top_ten_tags, aes(x=reorder(Fields, -Num_Count), y=Num_Count)) +
+  geom_bar(stat="identity", fill='steelblue')+
+  geom_text(aes(label=Num_Count), vjust=1.6, color="white", size=5.0)+
+  ggtitle("Plot of Top Ten Tags") +
+  xlab("Tag Name") + 
+  ylab("Frequency Count") +
+  theme(plot.title = element_text(size=30, face="bold"), axis.title.x = element_text(size=30, face="bold"),
+        axis.title.y = element_text(size=30, face="bold"))
+
 
 
 # let's display top ratings in bubble chart
+rating<-df$ratings
+rating<-as.character(rating)
+#rating<-str_extract_all(rating, 'name:, count:')
+class(rating)
+View(rating)
 
+
+# make bar graph of the top ratings
+x<-str_extract_all(rating[1], "\\w+")
+y<-str_extract_all(x,"name")
+y
